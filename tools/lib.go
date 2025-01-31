@@ -1,6 +1,10 @@
 package jsr_tools
 
-import jsr "github.com/teamdunno/go-jsr-registry"
+import (
+	"regexp"
+
+	jsr "github.com/teamdunno/go-jsr-registry"
+)
 
 func GetImportsFromDependencies(deps jsr.ModuleGraph2Dependencies) (res jsr.ModuleGraph2Dependencies) {
 	if deps == nil {
@@ -105,4 +109,64 @@ func GetUnyankedVersionsFromPackageMeta(meta jsr.PackageMetaVersions) (res jsr.P
 		res[name] = ver
 	}
 	return res
+}
+
+func HideHiddenObjectsFromManifest(manifest jsr.PackageManifest) (res jsr.PackageManifest, regexError error) {
+	if manifest == nil {
+		return jsr.PackageManifest{}, nil
+	}
+	res = make(jsr.PackageManifest)
+	hiddenObjRegex, err := regexp.Compile(`^.*(\/(\.[^\/]+)|(_[^\/]*))$`)
+	if err != nil {
+		return nil, err
+	}
+	for name, ver := range manifest {
+		if !hiddenObjRegex.Match([]byte(name)) {
+			continue
+		}
+		res[name] = ver
+	}
+	return res, nil
+}
+
+func HideNormalObjectsFromManifest(manifest jsr.PackageManifest) (res jsr.PackageManifest, regexError error) {
+	if manifest == nil {
+		return jsr.PackageManifest{}, nil
+	}
+	res = make(jsr.PackageManifest)
+	normalObjRegex, err := regexp.Compile(`^(\/([^\._][^\/]*)?)*$`)
+	if err != nil {
+		return nil, err
+	}
+	for name, ver := range manifest {
+		if !normalObjRegex.Match([]byte(name)) {
+			continue
+		}
+		res[name] = ver
+	}
+	return res, nil
+}
+
+func HasJSRJsonInManifest(manifest jsr.PackageManifest) bool {
+	_, ok := manifest["/jsr.json"]
+	return ok
+}
+
+func HasPackageJsonInManifest(manifest jsr.PackageManifest) bool {
+	_, ok := manifest["/package.json"]
+	return ok
+}
+
+func HasDenoJsonInManifest(manifest jsr.PackageManifest) bool {
+	_, ok := manifest["/deno.json"]
+	if ok {
+		return true
+	}
+	_, ok = manifest["/deno.jsonc"]
+	return ok
+}
+
+func HasBunfigTomlInManifest(manifest jsr.PackageManifest) bool {
+	_, ok := manifest["/bunfig.toml"]
+	return ok
 }

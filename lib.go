@@ -208,9 +208,6 @@ func (c *Client) GetPackage(option PackageOption) (*Package, error) {
 	}
 	return res, nil
 }
-func (pkg *PackageMeta) HasJSRJson() {
-
-}
 func NewClient(option ...ClientOption) (*Client, error) {
 	var opt *ClientOption = &ClientOption{}
 	var Protocol uint8 = ProtocolHTTPS
