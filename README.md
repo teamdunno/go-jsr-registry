@@ -20,4 +20,4 @@ import "github.com/teamdunno/go-jsr-registry"
 
 ## Example
 
-You can see our list of examples at [this folder](example)
+You can see our list of examples at [this folder](_example)
