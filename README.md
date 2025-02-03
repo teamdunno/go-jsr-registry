@@ -2,7 +2,7 @@
 
 Part of the [teamdunno](https://github.com/teamdunno)'s [`jsr-registry`](https://github.com/search?q=org%3Ateamdunno+jsr-registry&type=repositories) packages
 
-This package provides binding for JSR APIs, in Go
+This package provides (unofficial) bindings for JSR APIs, in Go
 
 ## Installation
 
