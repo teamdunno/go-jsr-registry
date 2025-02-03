@@ -182,6 +182,28 @@ func newJSONRequest[T interface{}](c *Client, intr T, method string, path string
 	} else {
 		defer res.Body.Close()
 	}
+	switch res.StatusCode {
+	case 200:
+		{
+			break
+		}
+	case 204:
+		{
+			break
+		}
+	case 404:
+		{
+			return nil, nil
+		}
+	default:
+		{
+			body, err := io.ReadAll(res.Body)
+			if err != nil {
+				return nil, errors.New(res.Status)
+			}
+			return nil, errors.New(res.Status + ": " + string(body))
+		}
+	}
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
 		return nil, err
