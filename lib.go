@@ -236,6 +236,10 @@ func checkAllAttr(s interface{}) error {
 
 	return nil
 }
+
+// Get package meta (including; list of versions, etc)
+//
+// note: both tuple'd values can be nil too, if the package wasnt found
 func (c *Client) GetPackageMeta(option PackageMetaOption) (*PackageMeta, error) {
 	err := checkAllAttr(&option)
 	if err != nil {
@@ -247,6 +251,10 @@ func (c *Client) GetPackageMeta(option PackageMetaOption) (*PackageMeta, error) 
 	}
 	return res, nil
 }
+
+// Get package with version on it
+//
+// note: both tuple'd values can be nil too, if the package (with specified version) wasnt found
 func (c *Client) GetPackage(option PackageOption) (*Package, error) {
 	err := checkAllAttr(&option)
 	if err != nil {
@@ -258,6 +266,8 @@ func (c *Client) GetPackage(option PackageOption) (*Package, error) {
 	}
 	return res, nil
 }
+
+// Make new Client instance
 func NewClient(option ...ClientOption) (*Client, error) {
 	var opt *ClientOption = &ClientOption{}
 	var Protocol uint8 = ProtocolHTTPS
