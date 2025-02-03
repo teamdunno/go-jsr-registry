@@ -3,6 +3,7 @@ package jsr
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"reflect"
@@ -84,9 +85,9 @@ type ModuleGraph2 struct {
 type PackageModuleGraph2 = map[string]ModuleGraph2
 type Manifest struct {
 	// File size, as bytes
-	Size uint
+	Size uint `json:"size"`
 	// SHA256 checksum from the file
-	Checksum string
+	Checksum string `json:"checksum"`
 }
 type PackageManifest = map[string]Manifest
 type Package struct {
@@ -157,7 +158,7 @@ type Client struct {
 	// Http client used on the Client
 	httpClient http.Client
 	// Middleware (for each request)
-	Middleware func(*http.Request)
+	middleware func(*http.Request)
 }
 
 func newJSONRequest[T interface{}](c *Client, intr T, method string, path string) (*T, error) {
@@ -172,8 +173,8 @@ func newJSONRequest[T interface{}](c *Client, intr T, method string, path string
 	if err != nil {
 		return nil, err
 	}
-	if c.Middleware != nil {
-		c.Middleware(req)
+	if c.middleware != nil {
+		c.middleware(req)
 	}
 	req.Header.Add("Accept", "application/json")
 	res, err := c.httpClient.Do(req)
@@ -216,7 +217,30 @@ func newJSONRequest[T interface{}](c *Client, intr T, method string, path string
 
 	return data, nil
 }
+func checkAllAttr(s interface{}) error {
+	v := reflect.ValueOf(s)
+	if v.Kind() != reflect.Ptr || v.Elem().Kind() != reflect.Struct {
+		return fmt.Errorf("input must be a pointer to a struct")
+	}
+	v = v.Elem()
+	for i := 0; i < v.NumField(); i++ {
+		field := v.Field(i)
+		fieldType := v.Type().Field(i)
+		if fieldType.PkgPath != "" {
+			continue
+		}
+		if reflect.DeepEqual(field.Interface(), reflect.Zero(field.Type()).Interface()) {
+			return fmt.Errorf("field %s is not defined", fieldType.Name)
+		}
+	}
+
+	return nil
+}
 func (c *Client) GetPackageMeta(option PackageMetaOption) (*PackageMeta, error) {
+	err := checkAllAttr(&option)
+	if err != nil {
+		return nil, err
+	}
 	res, err := newJSONRequest(c, PackageMeta{}, "GET", "/@"+option.Scope+"/"+option.Name+"/meta.json")
 	if err != nil {
 		return nil, err
@@ -224,6 +248,10 @@ func (c *Client) GetPackageMeta(option PackageMetaOption) (*PackageMeta, error) 
 	return res, nil
 }
 func (c *Client) GetPackage(option PackageOption) (*Package, error) {
+	err := checkAllAttr(&option)
+	if err != nil {
+		return nil, err
+	}
 	res, err := newJSONRequest(c, Package{}, "GET", "/@"+option.Scope+"/"+option.Name+"/"+option.Version+"_meta.json")
 	if err != nil {
 		return nil, err
